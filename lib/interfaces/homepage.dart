@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:convert'; // Required for jsonEncode/decode
-import 'package:http/http.dart' as http; // Required for http requests
-
 import '../models/post.dart';
-import '../services/post_services.dart'; // Ensure this path is correct
+import '../services/post_services.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,79 +10,72 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // --- Pagination State Variables ---
-  List<Post> _allPosts = []; // Accumulates ALL posts fetched from the API
-  List<Post> _filteredPosts = []; // Posts currently displayed after search filter
+  List<Post> _allPosts = [];
+  List<Post> _filteredPosts = [];
   int _currentPage = 1;
-  final int _postsPerPage = 10; // Number of posts per page
-  bool _isLoadingMore = false; // To prevent multiple simultaneous loads
-  bool _hasMoreData = true; // To know if there's more data to fetch
+  final int _postsPerPage = 10;
+  bool _isLoadingMore = false;
+  bool _hasMoreData = true;
 
   late ScrollController _scrollController;
   final PostService _postService = PostService();
 
-  // --- Search State Variables ---
-  bool _isSearching = false; // Controls search bar visibility
+  bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
-  String _currentSearchQuery = ''; // Stores the current search query
+  String _currentSearchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll); // Listen for scroll events
-    _fetchInitialPosts(); // Initial fetch (first page)
+    _scrollController.addListener(_onScroll);
+    _fetchInitialPosts();
   }
 
   @override
   void dispose() {
-    _scrollController.dispose(); // Dispose the scroll controller
-    _searchController.dispose(); // Dispose the search controller
+    _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  // Initial fetch for the first page
-  // This now only fetches from the API, filtering happens locally.
+
   void _fetchInitialPosts() {
     setState(() {
-      _isLoadingMore = true; // Indicate loading
-      _allPosts = []; // Clear existing posts when fetching initial
-      _filteredPosts = []; // Clear filtered posts too
-      _currentPage = 1; // Reset page
-      _hasMoreData = true; // Assume more data initially
-      // _currentSearchQuery is NOT reset here unless _clearSearch is called explicitly
+      _isLoadingMore = true;
+      _allPosts = [];
+      _filteredPosts = [];
+      _currentPage = 1;
+      _hasMoreData = true;
     });
     _postService.fetchPosts(
       page: 1,
       limit: _postsPerPage,
-      // searchQuery is no longer passed here; filtering is client-side
     ).then((posts) {
-      if (!mounted) return; // Check if widget's State is still mounted before setState
+      if (!mounted) return;
       setState(() {
-        _allPosts = posts; // Set initial posts
+        _allPosts = posts;
         _isLoadingMore = false;
-        _hasMoreData = posts.length == _postsPerPage; // Check if it's full page
-        _applySearchFilter(); // Apply the current search filter to the new data
+        _hasMoreData = posts.length == _postsPerPage;
+        _applySearchFilter();
       });
     }).catchError((error) {
-      if (!mounted) return; // Check if widget's State is still mounted before setState
+      if (!mounted) return;
       setState(() {
         _isLoadingMore = false;
       });
-      // Use context.mounted before ScaffoldMessenger.of(context)
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load initial posts: $error')),
       );
-      print('Error fetching initial posts: $error'); // For debugging
+      print('Error fetching initial posts: $error');
     });
   }
 
-  // Fetches more posts when scrolling
-  // This now only fetches from the API, filtering happens locally.
+  //
   Future<void> _fetchMorePosts() async {
     if (_isLoadingMore || !_hasMoreData) {
-      return; // Prevent multiple loads or if no more data
+      return;
     }
 
     setState(() {
@@ -96,48 +86,42 @@ class _HomePageState extends State<HomePage> {
       final newPosts = await _postService.fetchPosts(
         page: _currentPage + 1,
         limit: _postsPerPage,
-        // searchQuery is no longer passed here; filtering is client-side
       );
 
-      if (!mounted) return; // Check if widget's State is still mounted before setState
+      if (!mounted) return;
       setState(() {
-        _allPosts.addAll(newPosts); // Add new posts to the existing ALL posts list
+        _allPosts.addAll(newPosts);
         _currentPage++;
         _isLoadingMore = false;
-        _hasMoreData = newPosts.length == _postsPerPage; // Check if the last fetched page was full
-        _applySearchFilter(); // Apply the current search filter to the newly added data
+        _hasMoreData = newPosts.length == _postsPerPage;
+        _applySearchFilter();
       });
     } catch (e) {
-      if (!mounted) return; // Check if widget's State is still mounted before setState
+      if (!mounted) return;
       setState(() {
         _isLoadingMore = false;
       });
-      // Use context.mounted before ScaffoldMessenger.of(context)
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load more posts: $e')),
       );
-      print('Error fetching more posts: $e'); // For debugging
+      print('Error fetching more posts: $e');
     }
   }
 
-  // Applies the current search query to _allPosts and updates _filteredPosts
   void _applySearchFilter() {
     if (_currentSearchQuery.isEmpty) {
-      _filteredPosts = List.from(_allPosts); // Show all if no search query
+      _filteredPosts = List.from(_allPosts);
     } else {
       final queryLower = _currentSearchQuery.toLowerCase();
       _filteredPosts = _allPosts.where((post) {
-        // Search in title or body (case-insensitive)
         return post.title.toLowerCase().contains(queryLower) ||
             post.body.toLowerCase().contains(queryLower);
       }).toList();
     }
   }
 
-  // Listener for scroll events
   void _onScroll() {
-    // Check if the user is near the end of the scrollable content
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.9 &&
         !_isLoadingMore &&
         _hasMoreData) {
@@ -145,11 +129,10 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Method to handle search query changes (client-side filtering)
   void _onSearchChanged(String query) {
     setState(() {
-      _currentSearchQuery = query; // Update the current search query
-      _applySearchFilter(); // Re-apply filter based on new query
+      _currentSearchQuery = query;
+      _applySearchFilter();
     });
   }
 
@@ -159,11 +142,10 @@ class _HomePageState extends State<HomePage> {
       _searchController.clear();
       _isSearching = false;
       _currentSearchQuery = '';
-      _filteredPosts = List.from(_allPosts); // Show all posts
+      _filteredPosts = List.from(_allPosts);
     });
   }
 
-  // Shows a dialog for adding or editing a post
   Future<void> _showPostFormDialog({Post? post}) async {
     final TextEditingController titleController =
     TextEditingController(text: post?.title ?? '');
@@ -172,18 +154,17 @@ class _HomePageState extends State<HomePage> {
 
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // User must tap a button to close
-      builder: (BuildContext dialogContext) { // Use dialogContext to avoid conflicts
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
-          // Redesign changes start here
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), // More rounded corners
-          titlePadding: EdgeInsets.zero, // Remove default title padding
-          contentPadding: const EdgeInsets.fromLTRB(24.0, 0.0, 24.0, 10.0), // Adjust content padding
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          titlePadding: EdgeInsets.zero,
+          contentPadding: const EdgeInsets.fromLTRB(24.0, 0.0, 24.0, 10.0),
           title: Container(
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
               color: Theme.of(dialogContext).colorScheme.primary, // Use theme primary color
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)), // Rounded top corners
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Row(
               children: [
@@ -205,7 +186,7 @@ class _HomePageState extends State<HomePage> {
           ),
           content: SingleChildScrollView(
             child: ListBody(
-              children: <Widget>[
+              children: [
                 const SizedBox(height: 20), // Spacing after header
                 TextFormField(
                   controller: titleController,
@@ -235,8 +216,8 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          actionsPadding: const EdgeInsets.all(16.0), // Padding for action buttons
-          actions: <Widget>[
+          actionsPadding:  EdgeInsets.all(16.0), // Padding for action buttons
+          actions:[
             TextButton(
               style: TextButton.styleFrom(
                 foregroundColor: Theme.of(dialogContext).colorScheme.onSurface, // Text color
@@ -265,7 +246,7 @@ class _HomePageState extends State<HomePage> {
                   ScaffoldMessenger.of(dialogContext).showSnackBar( // Use dialogContext
                     const SnackBar(content: Text('Title and Body cannot be empty')),
                   );
-                  return; // Don't proceed if validation fails
+                  return;
                 }
 
                 bool success = false; // Flag to track success
@@ -299,24 +280,19 @@ class _HomePageState extends State<HomePage> {
                   }
                 }
 
-                // IMPORTANT: Check if the HomePage widget's context is still mounted
-                // before attempting to show a SnackBar on its Scaffold.
+
                 if (!context.mounted) { // Use context.mounted directly
                   Navigator.of(dialogContext).pop(); // Still pop the dialog
                   return; // If HomePage is unmounted, stop here.
                 }
 
-                // Show the SnackBar BEFORE popping the dialog
                 ScaffoldMessenger.of(context).showSnackBar( // Use widget's context for HomePage Scaffold
                   SnackBar(content: Text(message)),
                 );
 
-                // Now pop the dialog
                 Navigator.of(dialogContext).pop(); // Use dialogContext
 
-                // Only refresh if the operation was successful
                 if (success) {
-                  // Check mounted again before triggering state change that rebuilds HomePage
                   if (!mounted) return;
                   _fetchInitialPosts(); // Refetch all data (no search query needed here)
                 }
@@ -329,13 +305,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<bool?> _deletePost(int id) async {
-    bool? confirm = await showDialog<bool>(
+    bool? confirm = await showDialog(
       context: context,
       builder: (BuildContext dialogContext) { // Use dialogContext here too
         return AlertDialog(
           title: const Text('Confirm Delete'),
           content: const Text('Are you sure you want to delete this post?'),
-          actions: <Widget>[
+          actions: [
             TextButton(
               child: const Text('Cancel'),
               onPressed: () {
@@ -345,7 +321,7 @@ class _HomePageState extends State<HomePage> {
             TextButton(
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
               onPressed: () {
-                Navigator.of(dialogContext).pop(true); // Pop with true if confirmed
+                Navigator.of(dialogContext).pop(true);
               },
             ),
           ],
@@ -356,21 +332,16 @@ class _HomePageState extends State<HomePage> {
     if (confirm == true) {
       try {
         await _postService.deletePost(id);
-        // IMPORTANT: Check if the HomePage widget's context is still mounted
-        // before attempting to show a SnackBar on its Scaffold.
-        if (!context.mounted) return false; // Use context.mounted directly
+        if (!context.mounted) return false;
 
-        ScaffoldMessenger.of(context).showSnackBar( // Use widget's context for HomePage Scaffold
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Post deleted successfully!')),
         );
-        if (!mounted) return false; // Check State mounted before triggering state change
-        _fetchInitialPosts(); // Refetch all data (no search query needed here)
+        if (!mounted) return false;
+        _fetchInitialPosts();
         return true;
       } catch (e) {
-        // IMPORTANT: Check if the HomePage widget's context is still mounted
-        // before attempting to show a SnackBar on its Scaffold.
-        if (!context.mounted) return false; // Use context.mounted directly
-
+        if (!context.mounted) return false;
         ScaffoldMessenger.of(context).showSnackBar( // Use widget's context for HomePage Scaffold
           SnackBar(content: Text('Failed to delete post: $e')),
         );
@@ -408,19 +379,19 @@ class _HomePageState extends State<HomePage> {
               icon: const Icon(Icons.clear, color: Colors.white),
               onPressed: _clearSearch,
             )
-                : null, // Only one clear icon, shown conditionally
+                : null,
           ),
           style: const TextStyle(color: Colors.white, fontSize: 18),
-          onChanged: _onSearchChanged, // Trigger search on text change
+          onChanged: _onSearchChanged,
           onSubmitted: (value) => _onSearchChanged(value), // Also trigger on submission
         )
             : Text(
           'Posts CRUD App',
           style: TextStyle(
-            color: Colors.white, // Text color for contrast
-            fontSize: 22, // Larger font size
-            fontWeight: FontWeight.bold, // Bold text
-            shadows: [ // Add a subtle text shadow
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            shadows: [
               Shadow(
                 offset: Offset(1.0, 1.0),
                 blurRadius: 3.0,
@@ -438,7 +409,7 @@ class _HomePageState extends State<HomePage> {
               setState(() {
                 _isSearching = !_isSearching;
                 if (!_isSearching) {
-                  _clearSearch(); // Clear search and reset list when closing search bar
+                  _clearSearch();
                 }
               });
             },

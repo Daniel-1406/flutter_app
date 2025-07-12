@@ -1,16 +1,47 @@
-# flutter_app
+README: Flutter CRUD App with JSONPlaceholder This project is a simple Flutter application demonstrating CRUD (Create, Read, Update, Delete) operations using the JSONPlaceholder public REST API. It showcases fundamental Flutter development practices, including network requests, state management, and user interface design.
 
-A new Flutter project.
+Features View Posts: See a list of all posts retrieved from JSONPlaceholder.
 
-## Getting Started
+Add Post: Create a new post and submit it to the API.
 
-This project is a starting point for a Flutter application.
+Edit Post: Modify an existing post's details.
 
-A few resources to get you started if this is your first Flutter project:
+Delete Post: Remove a post from the list.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Loading Indicators: Provides visual feedback during API calls.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Error Handling: Gracefully handles network errors and displays informative messages.
+
+Clean UI: Simple and intuitive user interface for easy interaction.
+
+Technologies Used Flutter: The UI toolkit for building natively compiled applications for mobile, web, and desktop from a single codebase.
+
+http package: For making network requests to the JSONPlaceholder API.
+
+Setup Instructions Follow these steps to get the project up and running on your local machine:
+
+Clone the Repository:
+
+Bash
+
+git clone https://github.com/Daniel-1406/flutter_app cd "YOUR_PROJECT_FOLDER_NAME"
+
+To Install Dependencies:
+
+Bash flutter pub get
+
+Run the App: Bash flutter run (Ensure you have a device or emulator connected/running.)
+
+Implementation Details This application is structured to demonstrate clear separation of concerns.
+
+lib/models/post.dart: Defines the Post data model.
+
+lib/services/post_services.dart: Handles all API interactions, including the network logic for fetching, creating, updating, and deleting posts.
+
+lib/interfaces/homepage.dart: Displays the list of posts and Allows users to add, delete and edit post details..
+
+Error handling is implemented using try-catch blocks around API calls, providing user-friendly messages for network issues or server responses. Loading indicators are displayed (e.g., CircularProgressIndicator) to enhance the user experience during asynchronous operations.
+
+Note on JSONPlaceholder JSONPlaceholder is a mock API that simulates successful CRUD operations and returns valid responses
+
+Explore!
