@@ -54,9 +54,9 @@ This application is structured to demonstrate clear separation of concerns.
 
 lib/models/post.dart: Defines the Post data model.
 
-lib/services/post_service.dart: Handles all API interactions, encapsulating the network logic for fetching, creating, updating, and deleting posts.
+lib/services/post_services.dart: Handles all API interactions, encapsulating the network logic for fetching, creating, updating, and deleting posts.
 
-lib/screens/post_list_screen.dart: Displays the list of posts and allows users to add, delete and edit post details.
+lib/interfaces/homepage.dart: Displays the list of posts and allows users to add, delete and edit post details.
 
 Error handling is implemented using try-catch blocks around API calls, providing user-friendly messages for network issues or server responses. Loading indicators are displayed (e.g., CircularProgressIndicator) to enhance the user experience during asynchronous operations.
 
