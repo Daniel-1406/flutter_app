@@ -32,7 +32,7 @@ Clone the Repository:
 
 Bash
 
-git clone [YOUR_GITHUB_REPO_LINK_HERE]
+git clone Daniel-1406/flutter_app
 cd 'YOUR_PROJECT_FOLDER_NAME'
 
 Install Dependencies:
